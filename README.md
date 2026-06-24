@@ -116,11 +116,11 @@ sudo gem install cocoapods
 
 Unity Personal requires manual activation (one-time):
 
-1. Open Unity Hub on the Mac
+1. Open Unity Hub on the Mac Mini
 2. Sign in with your Unity account
-3. Open any project — this activates the license
-4. The license is stored at `/Library/Application Support/Unity/Unity_lic.ulf`
-5. **Important:** Unity Personal allows only one machine per account — use a dedicated CI account
+3. Open any project — Unity activates automatically
+4. Done — CLI/headless builds will work from now on
+5. **Important:** Unity Personal allows only one machine per account — use a dedicated CI account so it doesn't conflict with your dev machine
 
 ---
 
