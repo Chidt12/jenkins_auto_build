@@ -97,9 +97,9 @@ Open **System Settings** and configure:
 sudo xcode-select --install
 sudo xcodebuild -license accept
 
-# Java 17 (required for Jenkins agent)
-brew install openjdk@17
-sudo ln -sfn $(brew --prefix)/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk
+# Java 21 (required for Jenkins agent — must match server JDK version)
+brew install openjdk@21
+sudo ln -sfn $(brew --prefix)/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-21.jdk
 
 # Fastlane (for store uploads)
 brew install fastlane
