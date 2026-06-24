@@ -1,0 +1,22 @@
+jenkins:
+  systemMessage: "BaldEagle Hub — Jenkins Build Server (configured by JCasC)"
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_USER}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+  remotingSecurity:
+    enabled: true
+
+  slaveAgentPort: ${JENKINS_AGENT_PORT}
+
+unclassified:
+  location:
+    url: "${JENKINS_URL}"

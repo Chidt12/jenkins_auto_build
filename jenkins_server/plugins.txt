@@ -1,0 +1,10 @@
+workflow-aggregator
+git
+gitlab-plugin
+github
+configuration-as-code
+ws-cleanup
+timestamper
+pipeline-utility-steps
+credentials-binding
+ssh-agent

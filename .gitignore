@@ -1,0 +1,6 @@
+jenkins_server/.env
+jenkins_server/jenkins_home/
+jenkins_local/.env
+jenkins_local/agent.jar
+jenkins_local/logs/
+.superpowers/
