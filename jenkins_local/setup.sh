@@ -13,13 +13,15 @@ source "$SCRIPT_DIR/.env"
 echo "=== Jenkins Agent Setup ==="
 echo ""
 
-# Check Java
+# Java
 if ! command -v java &>/dev/null; then
-  echo "ERROR: Java is not installed."
-  echo "Install with: brew install openjdk@17"
-  exit 1
+  echo "[INSTALL] Java ..."
+  brew install java
+  sudo ln -sfn "$(brew --prefix java)/libexec/openjdk.jdk" /Library/Java/JavaVirtualMachines/openjdk.jdk
+  echo "[OK] Java installed"
+else
+  echo "[OK] Java: $(java -version 2>&1 | head -1)"
 fi
-echo "[OK] Java: $(java -version 2>&1 | head -1)"
 
 # Create work directory
 mkdir -p "$JENKINS_AGENT_WORKDIR"
@@ -49,21 +51,77 @@ echo "=== Build Tools ==="
 if command -v xcodebuild &>/dev/null; then
   echo "[OK] Xcode: $(xcodebuild -version | head -1)"
 else
-  echo "[--] Xcode: not installed"
+  echo "[--] Xcode: not installed (install from App Store)"
 fi
 
-if command -v fastlane &>/dev/null; then
-  echo "[OK] Fastlane: $(fastlane --version 2>&1 | head -1)"
+# Xcode Command Line Tools
+if xcode-select -p &>/dev/null; then
+  echo "[OK] Xcode CLI Tools: $(xcode-select -p)"
 else
-  echo "[--] Fastlane: not installed (brew install fastlane)"
+  echo "[INSTALL] Xcode Command Line Tools ..."
+  xcode-select --install
 fi
 
+# CocoaPods
 if command -v pod &>/dev/null; then
   echo "[OK] CocoaPods: $(pod --version)"
 else
-  echo "[--] CocoaPods: not installed (sudo gem install cocoapods)"
+  echo "[INSTALL] CocoaPods ..."
+  brew install cocoapods
+  echo "[OK] CocoaPods installed"
 fi
 
+# fastlane (Google Play upload)
+if command -v fastlane &>/dev/null; then
+  echo "[OK] fastlane: $(fastlane --version 2>&1 | head -1)"
+else
+  echo "[INSTALL] fastlane ..."
+  brew install fastlane
+  echo "[OK] fastlane installed"
+fi
+
+# rclone (Google Drive upload)
+if command -v rclone &>/dev/null; then
+  echo "[OK] rclone: $(rclone --version 2>&1 | head -1)"
+else
+  echo "[INSTALL] rclone ..."
+  brew install rclone
+  echo "[OK] rclone installed"
+fi
+
+# gsutil (Firebase Storage upload)
+if command -v gsutil &>/dev/null; then
+  echo "[OK] gsutil: $(gsutil --version 2>&1 | head -1)"
+else
+  echo "[INSTALL] Google Cloud SDK (includes gsutil) ..."
+  brew install google-cloud-sdk
+  echo "[OK] gsutil installed"
+fi
+
+echo ""
+echo "=== Jenkins Credentials ==="
+echo "Add these in Jenkins > Manage Jenkins > Credentials:"
+echo ""
+echo "  iOS TestFlight (role: Developer minimum):"
+echo "    - ASC_API_KEY_ID       (Secret text) — API Key ID"
+echo "    - ASC_API_ISSUER_ID    (Secret text) — Issuer ID"
+echo "    - ASC_API_KEY_FILE     (Secret file) — AuthKey_XXXX.p8"
+echo "    Create at: App Store Connect > Users and Access > Integrations > App Store Connect API"
+echo ""
+echo "  Google Play (permission: 'Release apps to testing tracks' minimum):"
+echo "    - GPLAY_SERVICE_ACCOUNT_JSON  (Secret file) — service account JSON key"
+echo "    Setup: Cloud Console > enable 'Google Play Android Developer API'"
+echo "           > create service account > download JSON key"
+echo "           > Play Console > Setup > API access > link project > invite service account"
+echo "    Note: permissions may take 24-48h to propagate"
+echo ""
+echo "  Google Drive (must use a Shared Drive — service accounts have no personal Drive quota):"
+echo "    - GDRIVE_SERVICE_ACCOUNT_JSON (Secret file) — service account JSON key"
+echo "    Setup: Cloud Console > enable 'Google Drive API'"
+echo "           > create service account > download JSON key"
+echo "           > Google Drive > Shared drives > create a Shared Drive"
+echo "           > add service account email as Content manager"
+echo "           > update GDRIVE_TEAM_DRIVE_ID in Jenkinsfile"
 echo ""
 echo "=== Next Steps ==="
 echo "1. In Jenkins UI: Manage Jenkins → Nodes → New Node"

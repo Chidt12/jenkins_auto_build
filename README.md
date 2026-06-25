@@ -92,24 +92,19 @@ Open **System Settings** and configure:
 
 ### 2.3 Install Required Software
 
+Install **Xcode** from the App Store first, then accept the license:
+
 ```bash
-# Xcode (install from App Store first, then run:)
-sudo xcode-select --install
 sudo xcodebuild -license accept
+```
 
-# Java 21 (required for Jenkins agent — must match server JDK version)
-brew install openjdk@21
-sudo ln -sfn $(brew --prefix)/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-21.jdk
+Install **Unity Hub** from https://unity.com/download, then install Unity with iOS + Android build support modules.
 
-# Fastlane (for store uploads)
-brew install fastlane
+Run `setup.sh` to auto-install everything else (Java, CocoaPods, fastlane, rclone, Xcode CLI Tools):
 
-# CocoaPods (for iOS dependencies)
-sudo gem install cocoapods
-
-# Unity Hub + Unity
-# Install Unity Hub from https://unity.com/download
-# Then install Unity 2022.3.x with iOS + Android build support modules
+```bash
+cd jenkins_local
+./setup.sh
 ```
 
 ### 2.4 Activate Unity License
@@ -226,6 +221,71 @@ To remove auto-start:
 ```bash
 ./uninstall-service.sh
 ```
+
+---
+
+## Part 4: Jenkins Credentials (for uploads)
+
+Go to **Manage Jenkins → Credentials → System → Global credentials → Add Credentials**.
+
+### 4.1 iOS TestFlight
+
+Create an API key at [App Store Connect → Users and Access → Integrations → App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api) with **Developer** role (minimum).
+
+| Credential ID | Type | Value |
+|---|---|---|
+| `ASC_API_KEY_ID` | Secret text | API Key ID (e.g. `ABC123DEFG`) |
+| `ASC_API_ISSUER_ID` | Secret text | Issuer ID shown at top of the API keys page |
+| `ASC_API_KEY_FILE` | Secret file | `AuthKey_XXXXXXXX.p8` file (downloaded once when creating the key) |
+
+### 4.2 Google Play
+
+| Credential ID | Type | Value |
+|---|---|---|
+| `GPLAY_SERVICE_ACCOUNT_JSON` | Secret file | Service account JSON key |
+
+Setup steps:
+1. [Google Cloud Console](https://console.cloud.google.com) → select or create a project
+2. Enable **Google Play Android Developer API**
+3. Go to **IAM & Admin → Service Accounts** → Create Service Account → download JSON key
+4. [Google Play Console](https://play.google.com/console) → **Setup → API access** → Link your Cloud project
+5. Find the service account → Grant **"Release apps to testing tracks"** permission
+6. Wait 24-48h for permissions to propagate
+
+### 4.3 Google Drive (Shared Drive)
+
+| Credential ID | Type | Value |
+|---|---|---|
+| `GDRIVE_SERVICE_ACCOUNT_JSON` | Secret file | Service account JSON key |
+
+> **Note:** Service accounts have no storage quota on personal Google Drive. You must use a **Shared Drive** (Team Drive).
+
+Setup steps:
+1. Same Google Cloud project → enable **Google Drive API**
+2. Create a service account (or reuse the one from 4.2) → download JSON key
+3. Add the JSON key as `GDRIVE_SERVICE_ACCOUNT_JSON` in Jenkins Credentials
+4. In Google Drive → **Shared drives** → click **+ New** → create a Shared Drive (e.g. `CI Builds`)
+5. Click the **Manage members** icon → add the service account email (e.g. `mybot@project.iam.gserviceaccount.com`) as **Content manager**
+6. Copy the Shared Drive ID from the URL: `drive.google.com/drive/folders/<SHARED_DRIVE_ID>`
+7. Update `GDRIVE_TEAM_DRIVE_ID` in `Jenkinsfile` environment block with this ID
+
+### 4.4 Firebase Storage (Addressable bundles)
+
+| Credential ID | Type | Value |
+|---|---|---|
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Secret file | Service account JSON key with Storage Admin role |
+
+Setup steps:
+1. Same Google Cloud project (`idle-zombie-unimob`) → **IAM & Admin → Service Accounts**
+2. Create a service account (or reuse existing) → grant **Storage Admin** role (`roles/storage.admin`)
+3. Download JSON key and add as `FIREBASE_SERVICE_ACCOUNT_JSON` in Jenkins Credentials
+4. Bundles are uploaded to `gs://idle-zombie-unimob.firebasestorage.app/{Android,iOS}/` to match the Addressable remote load path
+
+### 4.5 Git (already configured)
+
+| Credential ID | Type |
+|---|---|
+| `38369d68-b956-4a87-bac8-f708fedd2dba` | Username/Password for GitLab |
 
 ---
 
