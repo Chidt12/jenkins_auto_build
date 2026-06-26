@@ -103,7 +103,7 @@ if python3 -c "import jwt" &>/dev/null; then
   echo "[OK] PyJWT: $(python3 -c 'import jwt; print(jwt.__version__)')"
 else
   echo "[INSTALL] PyJWT + cryptography ..."
-  python3 -m pip install --user PyJWT cryptography -q
+  python3 -m pip install --break-system-packages PyJWT cryptography -q
   echo "[OK] PyJWT installed"
 fi
 
