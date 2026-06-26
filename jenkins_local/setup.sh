@@ -98,6 +98,15 @@ else
   echo "[OK] gsutil installed"
 fi
 
+# PyJWT + cryptography (App Store Connect API validation)
+if python3 -c "import jwt" &>/dev/null; then
+  echo "[OK] PyJWT: $(python3 -c 'import jwt; print(jwt.__version__)')"
+else
+  echo "[INSTALL] PyJWT + cryptography ..."
+  python3 -m pip install --user PyJWT cryptography -q
+  echo "[OK] PyJWT installed"
+fi
+
 echo ""
 echo "=== Jenkins Credentials ==="
 echo "Add these in Jenkins > Manage Jenkins > Credentials:"

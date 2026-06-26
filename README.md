@@ -100,7 +100,7 @@ sudo xcodebuild -license accept
 
 Install **Unity Hub** from https://unity.com/download, then install Unity with iOS + Android build support modules.
 
-Run `setup.sh` to auto-install everything else (Java, CocoaPods, fastlane, rclone, Xcode CLI Tools):
+Run `setup.sh` to auto-install everything else (Java, CocoaPods, fastlane, rclone, gsutil, PyJWT, Xcode CLI Tools):
 
 ```bash
 cd jenkins_local
