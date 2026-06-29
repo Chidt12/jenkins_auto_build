@@ -13,14 +13,20 @@ source "$SCRIPT_DIR/.env"
 echo "=== Jenkins Agent Setup ==="
 echo ""
 
-# Java
-if ! command -v java &>/dev/null; then
-  echo "[INSTALL] Java ..."
-  brew install java
-  sudo ln -sfn "$(brew --prefix java)/libexec/openjdk.jdk" /Library/Java/JavaVirtualMachines/openjdk.jdk
-  echo "[OK] Java installed"
-else
+# Java — macOS ships a /usr/bin/java stub that errors out if no JDK is installed,
+# so use a real runtime check, not `command -v java`.
+if /usr/libexec/java_home &>/dev/null && java -version &>/dev/null; then
   echo "[OK] Java: $(java -version 2>&1 | head -1)"
+else
+  echo "[INSTALL] Java (Temurin JDK) ..."
+  # Temurin is a cask installer — registers itself with macOS, no manual symlink needed
+  brew install --cask temurin
+  if /usr/libexec/java_home &>/dev/null && java -version &>/dev/null; then
+    echo "[OK] Java installed: $(java -version 2>&1 | head -1)"
+  else
+    echo "[ERROR] Java install completed but 'java' still doesn't work. Open a new terminal and re-run setup.sh."
+    exit 1
+  fi
 fi
 
 # Create work directory
