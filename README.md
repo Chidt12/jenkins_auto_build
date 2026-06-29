@@ -146,12 +146,17 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-JENKINS_URL=http://your-server-ip:9090
+JENKINS_URL=https://your-jenkins.example.com
 JENKINS_AGENT_NAME=mac-builder
 JENKINS_AGENT_SECRET=<paste-the-secret-from-step-3.1>
 JENKINS_AGENT_WORKDIR=/Users/your-user/jenkins-agent
+JENKINS_AGENT_MODE=direct           # 'direct' (port 50000, faster) or 'websocket' (through reverse proxy)
 UNITY_EDITORS_PATH=/Applications/Unity/Hub/Editor
 ```
+
+> **Performance tip:** Use `direct` mode if port 50000 on the Jenkins server is reachable from the Mac. WebSocket mode tunnels through nginx and is significantly slower for log streaming. To enable direct mode:
+> 1. On the Jenkins server, open port 50000 in the firewall (`sudo ufw allow 50000/tcp`) and in your cloud provider's firewall (e.g. Hetzner Cloud).
+> 2. In Jenkins UI: **Manage Jenkins → Security → TCP port for inbound agents → Fixed: 50000**.
 
 ### 3.3 Run Setup
 
