@@ -7,6 +7,7 @@ if [ ! -f "$PLIST_PATH" ]; then
   exit 0
 fi
 
-launchctl unload "$PLIST_PATH"
-rm "$PLIST_PATH"
+launchctl bootout "gui/$(id -u)" "$PLIST_PATH" 2>/dev/null || \
+launchctl unload "$PLIST_PATH" 2>/dev/null || true
+rm -f "$PLIST_PATH"
 echo "Jenkins agent service uninstalled."

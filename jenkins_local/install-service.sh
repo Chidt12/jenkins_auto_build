@@ -63,7 +63,14 @@ cat > "$PLIST_PATH" << EOF
 </plist>
 EOF
 
-launchctl load "$PLIST_PATH"
+# Unload any existing service first
+launchctl bootout "gui/$(id -u)" "$PLIST_PATH" 2>/dev/null || \
+launchctl unload "$PLIST_PATH" 2>/dev/null || true
+
+# Load the service (try modern command first, fall back to legacy)
+if ! launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH" 2>/dev/null; then
+  launchctl load "$PLIST_PATH"
+fi
 echo "Jenkins agent service installed and started."
 echo "Plist: $PLIST_PATH"
 echo "Logs:  $JENKINS_AGENT_WORKDIR/logs/"
