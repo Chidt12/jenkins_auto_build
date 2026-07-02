@@ -68,13 +68,19 @@ else
   xcode-select --install
 fi
 
-# CocoaPods
-if command -v pod &>/dev/null; then
+# CocoaPods — install via Homebrew and verify it actually runs.
+# A Ruby upgrade can orphan CocoaPods' native ffi gem, making `pod`
+# crash on launch even though the binary exists. Reinstall fixes it.
+if command -v pod &>/dev/null && pod --version &>/dev/null; then
   echo "[OK] CocoaPods: $(pod --version)"
 else
   echo "[INSTALL] CocoaPods ..."
-  brew install cocoapods
-  echo "[OK] CocoaPods installed"
+  brew reinstall cocoapods
+  if ! pod --version &>/dev/null; then
+    echo "[ERROR] CocoaPods installed but 'pod' still fails. Try: sudo gem install cocoapods"
+    exit 1
+  fi
+  echo "[OK] CocoaPods: $(pod --version)"
 fi
 
 # fastlane (Google Play upload)
