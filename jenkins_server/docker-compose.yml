@@ -4,14 +4,17 @@ services:
     container_name: jenkins_server
     restart: unless-stopped
     ports:
-      - "${JENKINS_HTTP_PORT:-9090}:8080"
-      - "${JENKINS_AGENT_PORT:-50000}:50000"
+      # HTTP UI: loopback only. Public access goes through the nginx TLS vhost
+      # jenkins.baldeaglegamehost.de -> proxy_pass http://localhost:9090
+      - "${JENKINS_HTTP_BIND:-127.0.0.1}:${JENKINS_HTTP_PORT:-9090}:8080"
+      # JNLP agent port: must stay reachable for the inbound eagle-macmini agent
+      - "${JENKINS_AGENT_BIND:-0.0.0.0}:${JENKINS_AGENT_PORT:-50000}:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
     environment:
-      - JENKINS_ADMIN_USER=${JENKINS_ADMIN_USER:-admin}
-      - JENKINS_ADMIN_PASSWORD=${JENKINS_ADMIN_PASSWORD:-admin}
-      - JENKINS_URL=${JENKINS_URL:-http://localhost:9090}
+      - JENKINS_ADMIN_USER=${JENKINS_ADMIN_USER:?set JENKINS_ADMIN_USER in .env}
+      - JENKINS_ADMIN_PASSWORD=${JENKINS_ADMIN_PASSWORD:?set JENKINS_ADMIN_PASSWORD in .env}
+      - JENKINS_URL=${JENKINS_URL:-https://jenkins.baldeaglegamehost.de}
       - JENKINS_AGENT_PORT=${JENKINS_AGENT_PORT:-50000}
 
 volumes:

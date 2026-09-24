@@ -12,9 +12,6 @@ jenkins:
     loggedInUsersCanDoAnything:
       allowAnonymousRead: false
 
-  remotingSecurity:
-    enabled: true
-
   slaveAgentPort: ${JENKINS_AGENT_PORT}
 
 unclassified:
