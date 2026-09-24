@@ -13,14 +13,20 @@ source "$SCRIPT_DIR/.env"
 echo "=== Jenkins Agent Setup ==="
 echo ""
 
-# Java
-if ! command -v java &>/dev/null; then
-  echo "[INSTALL] Java ..."
-  brew install java
-  sudo ln -sfn "$(brew --prefix java)/libexec/openjdk.jdk" /Library/Java/JavaVirtualMachines/openjdk.jdk
-  echo "[OK] Java installed"
-else
+# Java — macOS ships a /usr/bin/java stub that errors out if no JDK is installed,
+# so use a real runtime check, not `command -v java`.
+if /usr/libexec/java_home &>/dev/null && java -version &>/dev/null; then
   echo "[OK] Java: $(java -version 2>&1 | head -1)"
+else
+  echo "[INSTALL] Java (Temurin JDK) ..."
+  # Temurin is a cask installer — registers itself with macOS, no manual symlink needed
+  brew install --cask temurin
+  if /usr/libexec/java_home &>/dev/null && java -version &>/dev/null; then
+    echo "[OK] Java installed: $(java -version 2>&1 | head -1)"
+  else
+    echo "[ERROR] Java install completed but 'java' still doesn't work. Open a new terminal and re-run setup.sh."
+    exit 1
+  fi
 fi
 
 # Create work directory
@@ -62,13 +68,19 @@ else
   xcode-select --install
 fi
 
-# CocoaPods
-if command -v pod &>/dev/null; then
+# CocoaPods — install via Homebrew and verify it actually runs.
+# A Ruby upgrade can orphan CocoaPods' native ffi gem, making `pod`
+# crash on launch even though the binary exists. Reinstall fixes it.
+if command -v pod &>/dev/null && pod --version &>/dev/null; then
   echo "[OK] CocoaPods: $(pod --version)"
 else
   echo "[INSTALL] CocoaPods ..."
-  brew install cocoapods
-  echo "[OK] CocoaPods installed"
+  brew reinstall cocoapods
+  if ! pod --version &>/dev/null; then
+    echo "[ERROR] CocoaPods installed but 'pod' still fails. Try: sudo gem install cocoapods"
+    exit 1
+  fi
+  echo "[OK] CocoaPods: $(pod --version)"
 fi
 
 # fastlane (Google Play upload)
@@ -103,7 +115,8 @@ if python3 -c "import jwt" &>/dev/null; then
   echo "[OK] PyJWT: $(python3 -c 'import jwt; print(jwt.__version__)')"
 else
   echo "[INSTALL] PyJWT + cryptography ..."
-  python3 -m pip install --break-system-packages PyJWT cryptography -q
+  python3 -m pip install --break-system-packages PyJWT cryptography -q 2>/dev/null || \
+  python3 -m pip install PyJWT cryptography -q
   echo "[OK] PyJWT installed"
 fi
 

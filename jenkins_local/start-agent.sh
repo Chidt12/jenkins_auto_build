@@ -26,9 +26,20 @@ echo "Connecting to: $JENKINS_URL"
 echo "Work directory: $JENKINS_AGENT_WORKDIR"
 echo ""
 
+# Connection mode: 'direct' (port 50000, faster) or 'websocket' (through reverse proxy, slower)
+AGENT_MODE="${JENKINS_AGENT_MODE:-direct}"
+
+CONNECTION_ARGS=()
+if [ "$AGENT_MODE" = "websocket" ]; then
+  echo "Mode: WebSocket (through reverse proxy)"
+  CONNECTION_ARGS+=(-webSocket)
+else
+  echo "Mode: Direct JNLP (port 50000) — make sure the port is open on the Jenkins server firewall"
+fi
+
 java -jar "$SCRIPT_DIR/agent.jar" \
   -url "$JENKINS_URL" \
   -secret "$JENKINS_AGENT_SECRET" \
   -name "$JENKINS_AGENT_NAME" \
   -workDir "$JENKINS_AGENT_WORKDIR" \
-  -webSocket
+  "${CONNECTION_ARGS[@]}"
