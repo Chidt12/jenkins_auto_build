@@ -128,6 +128,24 @@ if errorlevel 1 (
   echo [OK] gsutil: installed
 )
 
+rem In Git Bash, gcloud and gsutil look for python3 on the PATH and find the
+rem Microsoft Store alias. Point them to the Python in the Cloud SDK.
+rem install-service sets the same value for the agent.
+set "GCLOUD_PYTHON="
+for /f "delims=" %%G in ('where gcloud 2^>nul') do if not defined GCLOUD_PYTHON set "GCLOUD_PYTHON=%%~dpG..\platform\bundledpython\python.exe"
+if defined GCLOUD_PYTHON for %%P in ("%GCLOUD_PYTHON%") do set "GCLOUD_PYTHON=%%~fP"
+if defined GCLOUD_PYTHON if not exist "%GCLOUD_PYTHON%" set "GCLOUD_PYTHON="
+if not defined GCLOUD_PYTHON (
+  echo [--] gcloud Python: not found. If the Cloud SDK installed now, open a new Command Prompt and run setup again.
+) else if defined CLOUDSDK_PYTHON (
+  echo [OK] gcloud Python: "%CLOUDSDK_PYTHON%"
+) else (
+  setx CLOUDSDK_PYTHON "%GCLOUD_PYTHON%" >nul
+  echo [OK] gcloud Python: set CLOUDSDK_PYTHON to "%GCLOUD_PYTHON%"
+  set "PATH_CHANGED=1"
+  set "NEED_NEW_TERMINAL=1"
+)
+
 echo.
 echo === Jenkins Credentials ===
 echo Android jobs use GPLAY_SERVICE_ACCOUNT_JSON, GDRIVE_SERVICE_ACCOUNT_JSON and
@@ -139,7 +157,7 @@ if defined NEED_NEW_TERMINAL (
   echo 0. Some tools were installed now. Open a new Command Prompt and run setup again.
 )
 if defined PATH_CHANGED (
-  echo 0. The PATH changed. If the agent service is installed, run uninstall-service and
+  echo 0. Your PATH or environment changed. If the agent service is installed, run uninstall-service and
   echo    then install-service, so the agent gets the new PATH.
 )
 echo 1. In Jenkins UI: Manage Jenkins ^> Nodes ^> New Node

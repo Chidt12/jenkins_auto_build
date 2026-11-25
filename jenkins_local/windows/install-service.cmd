@@ -87,6 +87,20 @@ if not defined GIT_BIN (
   echo Run setup first, then run install-service again.
 )
 
+rem In "sh" steps, gcloud and gsutil run their shell scripts. These look for
+rem python3 on the PATH and find the Microsoft Store alias, which only prints
+rem "Python was not found". Point them to the Python in the Cloud SDK.
+set "GCLOUD_PYTHON="
+for /f "delims=" %%G in ('where gcloud 2^>nul') do if not defined GCLOUD_PYTHON set "GCLOUD_PYTHON=%%~dpG..\platform\bundledpython\python.exe"
+if defined GCLOUD_PYTHON for %%P in ("%GCLOUD_PYTHON%") do set "GCLOUD_PYTHON=%%~fP"
+if defined GCLOUD_PYTHON if not exist "%GCLOUD_PYTHON%" set "GCLOUD_PYTHON="
+if not defined GCLOUD_PYTHON if exist "%LOCALAPPDATA%\Google\Cloud SDK\google-cloud-sdk\platform\bundledpython\python.exe" set "GCLOUD_PYTHON=%LOCALAPPDATA%\Google\Cloud SDK\google-cloud-sdk\platform\bundledpython\python.exe"
+if not defined GCLOUD_PYTHON if exist "%ProgramFiles(x86)%\Google\Cloud SDK\google-cloud-sdk\platform\bundledpython\python.exe" set "GCLOUD_PYTHON=%ProgramFiles(x86)%\Google\Cloud SDK\google-cloud-sdk\platform\bundledpython\python.exe"
+if not defined GCLOUD_PYTHON (
+  echo WARNING: Python of the Google Cloud SDK not found. gcloud and gsutil fail in "sh" steps.
+  echo Run setup first, then run install-service again.
+)
+
 rem Stop any existing service first. cmd reads a batch file while it runs,
 rem so the old runner must exit before we rewrite it.
 call "%SCRIPT_DIR%uninstall-service.cmd" quiet
@@ -121,6 +135,7 @@ if exist "%STOP_FLAG%" del /q "%STOP_FLAG%"
   echo title Jenkins Agent - do not close
   echo cd /d "%WORKDIR%"
   if defined GIT_BIN echo set "PATH=%GIT_BIN%;%%PATH%%"
+  if defined GCLOUD_PYTHON echo set "CLOUDSDK_PYTHON=%GCLOUD_PYTHON%"
   echo :loop
   echo if exist "%STOP_FLAG%" exit
   echo echo [%%DATE%% %%TIME%%] Starting Jenkins agent ^>^> "%STDOUT_LOG%"
@@ -145,6 +160,7 @@ echo Jenkins agent service installed and started.
 echo Task:   %TASK_NAME%, runs as %USERDOMAIN%\%USERNAME%
 echo Runner: "%RUNNER%"
 if defined GIT_BIN echo sh:     "%GIT_BIN%\sh.exe"
+if defined GCLOUD_PYTHON echo gcloud: "%GCLOUD_PYTHON%"
 echo Logs:   "%WORKDIR%\logs"
 echo.
 echo The agent starts when this user logs on. For an unattended machine, turn on automatic logon.
