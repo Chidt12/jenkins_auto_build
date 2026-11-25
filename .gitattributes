@@ -1,0 +1,2 @@
+# Command Prompt needs CRLF line endings in batch files
+*.cmd text eol=crlf

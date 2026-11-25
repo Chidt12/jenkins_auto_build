@@ -2,8 +2,9 @@
 
 Auto-build pipeline for Unity projects (Android + iOS).
 
-- **jenkins_server/** — Docker-based Jenkins server (runs on your cloud server)
-- **jenkins_local/** — Jenkins agent scripts (runs on your Mac Mini build machine)
+- **jenkins_server/**: Docker-based Jenkins server (runs on your cloud server)
+- **jenkins_local/ios/**: Jenkins agent scripts for the Mac Mini build machine (iOS + Android)
+- **jenkins_local/windows/**: Jenkins agent scripts for a Windows build machine (Android), see Part 5
 
 ---
 
@@ -103,7 +104,7 @@ Install **Unity Hub** from https://unity.com/download, then install Unity with i
 Run `setup.sh` to auto-install everything else (Java, CocoaPods, fastlane, rclone, gsutil, PyJWT, Xcode CLI Tools):
 
 ```bash
-cd jenkins_local
+cd jenkins_local/ios
 ./setup.sh
 ```
 
@@ -139,7 +140,7 @@ Unity Personal requires manual activation (one-time):
 ### 3.2 Configure Agent on Mac
 
 ```bash
-cd jenkins_local
+cd jenkins_local/ios
 cp .env.example .env
 ```
 
@@ -161,7 +162,7 @@ UNITY_EDITORS_PATH=/Applications/Unity/Hub/Editor
 ### 3.3 Run Setup
 
 ```bash
-cd jenkins_local
+cd jenkins_local/ios
 ./setup.sh
 ```
 
@@ -291,6 +292,59 @@ Setup steps:
 | Credential ID | Type |
 |---|---|
 | `38369d68-b956-4a87-bac8-f708fedd2dba` | Username/Password for GitLab |
+
+---
+
+## Part 5: Windows Build Machine (Android)
+
+The scripts in `jenkins_local/windows/` set up a Windows PC as a second agent. A Windows agent cannot build iOS, so use it for Android jobs. Run every command in Command Prompt.
+
+### 5.1 Install Required Software
+
+Install Unity Hub from https://unity.com/download. Then install Unity with the Android Build Support module. Activate the Unity license once in Unity Hub, as in 2.4.
+
+### 5.2 Add Node in Jenkins UI
+
+Add a node as in 3.1, with these values:
+
+- Node name: `windows-builder`
+- Remote root directory: `C:\jenkins-agent`
+- Labels: `windows unity android`
+
+Copy the secret from the node page.
+
+### 5.3 Configure and Run Setup
+
+```bat
+cd jenkins_local\windows
+copy .env.example .env
+```
+
+Edit `.env`. Use Windows paths, and paste the secret from 5.2. Then run setup:
+
+```bat
+setup
+```
+
+`setup.cmd` installs the missing tools with winget: Java 21, Git, Ruby with fastlane, rclone, and the Google Cloud SDK (gsutil). If it installs a tool, open a new Command Prompt and run `setup` again. The old window keeps the old PATH, so it cannot find the new tools.
+
+### 5.4 Install the Agent Service
+
+Open Command Prompt as administrator in `jenkins_local\windows`, and run:
+
+```bat
+install-service
+```
+
+The script registers a Scheduled Task named `JenkinsAgent`. The task starts the agent in a minimized window when the user logs on. If the agent stops, the window starts it again after 10 seconds. Do not close the minimized "Jenkins Agent" window, because closing it stops the agent.
+
+Turn on automatic logon for the build user. If automatic logon is off, the agent does not start after a reboot.
+
+To remove the service, run `uninstall-service` as administrator.
+
+### 5.5 Jenkinsfile Steps on Windows
+
+`sh` steps need `sh.exe` on the PATH. Git for Windows includes `sh.exe` in `C:\Program Files\Git\bin`. Add that folder to the system PATH, then run `install-service` again. As an alternative, use `bat` steps in the Windows jobs.
 
 ---
 
