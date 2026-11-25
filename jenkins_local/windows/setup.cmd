@@ -135,5 +135,5 @@ echo    - Remote root directory: %WORKDIR%
 echo    - Labels: windows unity android
 echo    - Launch method: Launch agent by connecting it to the controller
 echo 2. Copy the secret from the node page and paste it into .env as JENKINS_AGENT_SECRET
-echo 3. Open Command Prompt as administrator in this folder and run: install-service
+echo 3. Run: install-service. It asks for administrator rights.
 echo.

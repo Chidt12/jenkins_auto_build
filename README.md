@@ -330,17 +330,17 @@ setup
 
 ### 5.4 Install the Agent Service
 
-Open Command Prompt as administrator in `jenkins_local\windows`, and run:
+In `jenkins_local\windows`, run:
 
 ```bat
 install-service
 ```
 
-The script registers a Scheduled Task named `JenkinsAgent`. The task starts the agent in a minimized window when the user logs on. If the agent stops, the window starts it again after 10 seconds. Do not close the minimized "Jenkins Agent" window, because closing it stops the agent.
+If the Command Prompt is not an administrator prompt, Windows asks for administrator rights. The script then runs in a new administrator window, which stays open until you press a key. The script registers a Scheduled Task named `JenkinsAgent`. The task starts the agent in a minimized window when the user logs on. If the agent stops, the window starts it again after 10 seconds. Do not close the minimized "Jenkins Agent" window, because closing it stops the agent.
 
 Turn on automatic logon for the build user. If automatic logon is off, the agent does not start after a reboot.
 
-To remove the service, run `uninstall-service` as administrator.
+To remove the service, run `uninstall-service`.
 
 ### 5.5 Jenkinsfile Steps on Windows
 

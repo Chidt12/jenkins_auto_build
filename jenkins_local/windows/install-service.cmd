@@ -3,19 +3,36 @@ rem Windows version of install-service.sh. Registers a Scheduled Task that
 rem starts the Jenkins agent when this user logs on. A batch loop restarts
 rem the agent whenever it exits, like KeepAlive in the macOS plist.
 rem
-rem Run from Command Prompt as administrator, in this folder:
+rem Run from Command Prompt in this folder. The script asks for
+rem administrator rights through UAC if the prompt does not have them:
 rem   install-service
 setlocal
 
 set "SCRIPT_DIR=%~dp0"
 set "TASK_NAME=JenkinsAgent"
 
-rem Creating a logon task needs administrator rights
+rem Creating a logon task needs administrator rights. Without them, ask
+rem through UAC and run this script again in a new administrator window.
 net session >nul 2>&1
 if errorlevel 1 (
-  echo ERROR: Run Command Prompt as administrator and try again.
-  exit /b 1
+  echo Asking for administrator rights ...
+  powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -ArgumentList 'elevated' -Verb RunAs"
+  if errorlevel 1 echo ERROR: Administrator rights were not given.
+  exit /b
 )
+
+rem The administrator window closes when the script ends, so keep it open
+rem until the user reads the result
+if /i "%~1"=="elevated" (
+  call :main
+  echo.
+  pause
+  exit /b
+)
+call :main
+exit /b
+
+:main
 
 rem Load .env, same file as the macOS scripts
 if not exist "%SCRIPT_DIR%.env" (
