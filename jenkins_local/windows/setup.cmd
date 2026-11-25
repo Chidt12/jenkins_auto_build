@@ -71,14 +71,20 @@ if errorlevel 1 (
   for /f "delims=" %%V in ('git --version') do echo [OK] Git: %%V
 )
 
-rem Git puts git.exe on the PATH, but not sh.exe. Jenkinsfile "sh" steps
-rem need it, so add Git's bin folder to this user's PATH.
-set "GIT_BIN=%ProgramFiles%\Git\bin"
+rem Jenkinsfile "sh" steps need sh.exe from Git for Windows. Git puts only
+rem git.exe on the PATH, so find Git's bin folder from where git.exe is.
+set "GIT_BIN="
+for /f "delims=" %%G in ('where git 2^>nul') do if not defined GIT_BIN set "GIT_BIN=%%~dpG..\bin"
+if defined GIT_BIN for %%P in ("%GIT_BIN%") do set "GIT_BIN=%%~fP"
+if defined GIT_BIN if not exist "%GIT_BIN%\sh.exe" set "GIT_BIN="
+if not defined GIT_BIN if exist "%ProgramFiles%\Git\bin\sh.exe" set "GIT_BIN=%ProgramFiles%\Git\bin"
+rem install-service also puts it on the agent's PATH. Adding it to this
+rem user's PATH makes "sh" work in Command Prompt too.
 set "PATH_CHANGED="
 where sh >nul 2>&1
 if not errorlevel 1 (
   echo [OK] sh: found
-) else if exist "%GIT_BIN%\sh.exe" (
+) else if defined GIT_BIN (
   call :add_user_path "%GIT_BIN%"
 ) else (
   echo [--] sh: Git is not installed yet. Run setup again after it installs.
