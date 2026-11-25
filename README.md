@@ -344,7 +344,7 @@ To remove the service, run `uninstall-service`.
 
 ### 5.5 Jenkinsfile Steps on Windows
 
-`sh` steps need `sh.exe` on the PATH. Git for Windows includes `sh.exe` in `C:\Program Files\Git\bin`. Add that folder to the system PATH, then run `install-service` again. As an alternative, use `bat` steps in the Windows jobs.
+`sh` steps need `sh.exe` on the PATH. Git for Windows includes `sh.exe` in `C:\Program Files\Git\bin`, but Git does not add that folder to the PATH. `setup.cmd` adds it to the PATH of the current Windows user. If the agent service is already installed, run `uninstall-service` and then `install-service`, so the agent gets the new PATH. If the agent runs as a different Windows user, add the folder to that user's PATH.
 
 ---
 
